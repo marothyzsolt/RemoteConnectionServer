@@ -12,8 +12,10 @@ abstract public class BaseDriver {
         this.client = client;
     }
 
-    public void send(Object o) throws InterruptedException {
-        this.driver.put(o);
+    public void send(Object o) {
+        try {
+            this.driver.put(o);
+        } catch (Exception ignored) {}
     }
 
     public Object waitForDriver() throws InterruptedException {

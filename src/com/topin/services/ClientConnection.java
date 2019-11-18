@@ -23,6 +23,7 @@ public class ClientConnection implements Runnable {
 
     public void run() {
         new Thread(new ClientMessageSender(this.clientMessageDriver)).start();
+        new Thread(new ScreenCapture(this.clientMessageDriver)).start();
 
         try {
             do {

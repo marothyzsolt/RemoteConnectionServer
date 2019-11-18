@@ -34,13 +34,13 @@ public class ClientMessageSender implements Runnable {
 
         StringReader stringReader = new StringReader(o.toString());
 
+        System.out.println("Sending: " + o);
 
         OutputStream outputStream = new BufferedOutputStream(this.clientMessageDriver.getClient().getOutputStream());
         outputStream = new BufferedOutputStream(this.clientMessageDriver.getClient().getOutputStream());
         int c;
         while ((c = stringReader.read()) != -1) {
             outputStream.write(c);
-            System.out.println(c);
         }
         outputStream.write((int) '\n');
         outputStream.flush();
