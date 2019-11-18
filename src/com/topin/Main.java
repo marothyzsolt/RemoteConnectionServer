@@ -7,8 +7,10 @@ import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Base64;
@@ -16,19 +18,46 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
 public class Main {
-    /*public static class ImageCanvas extends Canvas {
+    public static class ImageCanvas extends Canvas {
 
         private BufferedImage img;
 
+        public String captureToBase64() {
+
+            Rectangle screenSize = new
+                    Rectangle(Toolkit.getDefaultToolkit().getScreenSize());
+            BufferedImage screenCapture = null;
+            String base64Encoded = "";
+
+            try {
+
+                screenCapture = new Robot().createScreenCapture(screenSize);
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                ImageIO.write(screenCapture, "jpg", baos);
+                baos.flush();
+                byte[] encodeBase64 = Base64.getEncoder().encode(baos.toByteArray());
+                base64Encoded = new String(encodeBase64);
+                baos.close();
+
+            } catch (AWTException | IOException e) {
+                e.getMessage();
+            }
+
+            return base64Encoded;
+        }
 
         public ImageCanvas() {
             try {
-                Rectangle screenSize = new Rectangle(Toolkit.getDefaultToolkit().getScreenSize());
-                img = new Robot().createScreenCapture(screenSize);
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                String b64 = this.captureToBase64();
+                InputStream in = new ByteArrayInputStream(
+                        Base64.getDecoder().decode(b64)
+                );
+                img = ImageIO.read(in);
+
                 ImageIO.write(img, "jpg", baos);
                 baos.flush();
-            } catch (IOException | AWTException ex) {
+            } catch (IOException ex) {
                 ex.printStackTrace();
             }
         }
@@ -48,10 +77,10 @@ public class Main {
             }
         }
 
-    }*/
+    }
 
     public static void main(String[] args) {
-        /*Canvas csStatusImage = new ImageCanvas();
+        Canvas csStatusImage = new ImageCanvas();
         csStatusImage.setBounds(393, 36, 200, 200);
 
         Frame frame = new Frame("Testing");
@@ -65,7 +94,7 @@ public class Main {
         frame.pack();
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
-        frame.setBounds(110, 110, 1024, 768);*/
+        frame.setBounds(110, 110, 1024, 768);
 
 
         System.out.println("Starting server...");

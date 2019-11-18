@@ -23,7 +23,7 @@ public class ClientMessageSender implements Runnable {
                 //System.out.println(o);
             }
         } catch (InterruptedException | IOException e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
     }
 
