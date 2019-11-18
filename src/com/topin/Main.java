@@ -43,6 +43,7 @@ public class Main {
                 e.getMessage();
             }
 
+
             return base64Encoded;
         }
 
