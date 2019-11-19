@@ -1,24 +1,14 @@
 package com.topin;
 
+import com.topin.model.builder.MessageBuilder;
 import com.topin.services.ClientConnection;
+import org.json.JSONObject;
 
-import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Base64;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 
 public class Main {
-    public static class ImageCanvas extends Canvas {
+    /*public static class ImageCanvas extends Canvas {
 
         private BufferedImage img;
 
@@ -78,10 +68,10 @@ public class Main {
             }
         }
 
-    }
+    }*/
 
     public static void main(String[] args) {
-        Canvas csStatusImage = new ImageCanvas();
+        /*Canvas csStatusImage = new ImageCanvas();
         csStatusImage.setBounds(393, 36, 200, 200);
 
         Frame frame = new Frame("Testing");
@@ -95,7 +85,13 @@ public class Main {
         frame.pack();
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
-        frame.setBounds(110, 110, 1024, 768);
+        frame.setBounds(110, 110, 1024, 768);*/
+
+
+        /*String jsonData = new MessageBuilder("command").add("command", "cmd.exe /c dir").get().toString();
+        JSONObject jsonObject = new JSONObject(jsonData);
+        System.out.println(jsonObject.get("command"));
+        System.exit(0);*/
 
 
         System.out.println("Starting server...");

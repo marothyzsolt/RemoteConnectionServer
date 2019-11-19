@@ -1,11 +1,11 @@
 package com.topin.services;
 
-import com.topin.model.ClientMessage;
+import com.topin.model.Message;
 
 public class ClientConnectionMessage implements Runnable {
-    private ClientMessage clientMessage;
+    private Message clientMessage;
 
-    ClientConnectionMessage(ClientMessage clientMessage) {
+    ClientConnectionMessage(Message clientMessage) {
         this.clientMessage = clientMessage;
     }
 

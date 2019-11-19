@@ -1,8 +1,8 @@
 package com.topin.services;
 
 import com.topin.driver.ClientMessageDriver;
-import com.topin.model.ClientMessage;
-import org.json.JSONObject;
+import com.topin.model.Message;
+import com.topin.model.builder.MessageBuilder;
 
 import java.io.*;
 import java.net.Socket;
@@ -23,7 +23,7 @@ public class ClientConnection implements Runnable {
 
     public void run() {
         new Thread(new ClientMessageSender(this.clientMessageDriver)).start();
-        new Thread(new ScreenCapture(this.clientMessageDriver)).start();
+       // new Thread(new ScreenCapture(this.clientMessageDriver)).start();
 
         try {
             do {
@@ -36,20 +36,21 @@ public class ClientConnection implements Runnable {
 
     private void listen() throws IOException, InterruptedException {
         do {
-            //this.clientMessageDriver.send("Teszt 12321");
-
             String message = bufferedReader.readLine();
-            this.onMessage(new ClientMessage(message));
+
+            Message messageObject = MessageBuilder.build(message);
+            this.onMessage(messageObject);
 
         } while (bufferedReader.readLine() != null);
     }
 
-    private void onMessage(ClientMessage clientMessage) throws InterruptedException {
-        new Thread(new ClientConnectionMessage(clientMessage)).start();
+    private void onMessage(Message messageObject) {
+        new Thread(new ClientConnectionMessage(messageObject)).start();
 
-        String jsonString = new JSONObject()
-                .put("success", true)
-                .toString();
-        this.clientMessageDriver.send(jsonString);
+        MessageBuilder builder = (MessageBuilder)
+                new MessageBuilder("status")
+                        .add("success", true);
+
+        this.clientMessageDriver.send(builder.get());
     }
 }

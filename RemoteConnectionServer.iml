@@ -8,5 +8,6 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="org.json:json:20190722" level="project" />
+    <orderEntry type="library" name="org.codehaus.jackson:jackson-mapper-asl:1.9.9" level="project" />
   </component>
 </module>
