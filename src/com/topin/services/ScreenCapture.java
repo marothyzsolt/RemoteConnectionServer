@@ -1,6 +1,7 @@
 package com.topin.services;
 
 import com.topin.driver.ClientMessageDriver;
+import com.topin.model.command.StatusMessage;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -19,7 +20,7 @@ public class ScreenCapture implements Runnable {
     }
 
     public void run() {
-        while(true) {
+        /*while(true) {
             String captured = this.captureToBase64();
             if (!captured.equals(this.lastCapture)) {
                 clientMessageDriver.send(captured);
@@ -27,6 +28,14 @@ public class ScreenCapture implements Runnable {
             }
             try {
                 Thread.sleep(500);
+            } catch (InterruptedException ignored) {}
+        }*/
+
+        while(true) {
+            String message = new StatusMessage(true).toJson();
+            clientMessageDriver.send(message);
+            try {
+                Thread.sleep(1500);
             } catch (InterruptedException ignored) {}
         }
     }

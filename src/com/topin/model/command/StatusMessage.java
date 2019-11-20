@@ -14,6 +14,7 @@ public class StatusMessage extends Message {
     @Override
     public String toJson() {
         return new JSONObject()
+                .put("type", "status")
                 .put("success", this.status)
                 .toString();
     }

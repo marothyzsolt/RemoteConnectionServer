@@ -17,18 +17,22 @@ public class MessageBuilder extends BuilderBase {
 
     public MessageContract get() {
         MessageContract messageBuilder;
-        switch (this.type) {
-            case "status":
-                messageBuilder = new StatusMessage((Boolean) this.data.get("success"));
-                break;
-            case "command":
-                messageBuilder = new CommandMessage((String) this.data.get("command"));
-                break;
-            default:
-                messageBuilder = new UndefinedMessage("undefined");
-                break;
+        try {
+            switch (this.type) {
+                case "status":
+                    messageBuilder = new StatusMessage((Boolean) this.data.get("success"));
+                    break;
+                case "command":
+                    messageBuilder = new CommandMessage((String) this.data.get("command"));
+                    break;
+                default:
+                    messageBuilder = new UndefinedMessage("undefined");
+                    break;
+            }
+        } catch (NullPointerException e) {
+            System.out.println("Error in json string (not syntax error). Called undefined parameter inside json object.");
         }
-        return messageBuilder;
+        return new UndefinedMessage("undefined");
     }
 
     public static Message build(String jsonData) {
@@ -42,7 +46,7 @@ public class MessageBuilder extends BuilderBase {
             Message messageObject = (Message) messageBuilder.get();
             return messageObject;
         } catch (JSONException err){
-            System.out.println("Json exception on message");
+            System.out.println("Json exception on message: " + jsonData);
         }
         return null;
     }

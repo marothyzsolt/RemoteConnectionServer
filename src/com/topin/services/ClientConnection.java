@@ -23,33 +23,38 @@ public class ClientConnection implements Runnable {
 
     public void run() {
         new Thread(new ClientMessageSender(this.clientMessageDriver)).start();
-       // new Thread(new ScreenCapture(this.clientMessageDriver)).start();
+        new Thread(new ScreenCapture(this.clientMessageDriver)).start();
+
+        // Send a success status to just connected user
+        this.sendStatusMessage(true);
 
         try {
-            do {
-                this.listen();
-            } while (this.bufferedReader.readLine() != null);
+            this.listen();
         } catch (Exception e) {
             System.out.println("Connection closed (" + this.client + ")");
         }
     }
 
     private void listen() throws IOException, InterruptedException {
+        String message;
         do {
-            String message = bufferedReader.readLine();
+            message = bufferedReader.readLine();
 
             Message messageObject = MessageBuilder.build(message);
             this.onMessage(messageObject);
-
-        } while (bufferedReader.readLine() != null);
+        } while (message != null);
     }
 
     private void onMessage(Message messageObject) {
         new Thread(new ClientConnectionMessage(messageObject)).start();
 
+        this.sendStatusMessage(true);
+    }
+
+    private void sendStatusMessage(boolean status) {
         MessageBuilder builder = (MessageBuilder)
                 new MessageBuilder("status")
-                        .add("success", true);
+                        .add("success", status);
 
         this.clientMessageDriver.send(builder.get());
     }
