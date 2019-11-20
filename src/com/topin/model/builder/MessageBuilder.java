@@ -29,6 +29,7 @@ public class MessageBuilder extends BuilderBase {
                     messageBuilder = new UndefinedMessage("undefined");
                     break;
             }
+            return messageBuilder;
         } catch (NullPointerException e) {
             System.out.println("Error in json string (not syntax error). Called undefined parameter inside json object.");
         }
