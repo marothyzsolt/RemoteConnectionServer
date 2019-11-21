@@ -3,6 +3,7 @@ package com.topin.model.builder;
 import com.topin.helpers.JsonHelper;
 import com.topin.model.Message;
 import com.topin.model.command.CommandMessage;
+import com.topin.model.command.LoginMessage;
 import com.topin.model.command.StatusMessage;
 import com.topin.model.command.UndefinedMessage;
 import com.topin.model.contracts.MessageContract;
@@ -19,13 +20,22 @@ public class MessageBuilder extends BuilderBase {
         MessageContract messageBuilder;
         try {
             switch (this.type) {
+                case "login":
+                    messageBuilder = new LoginMessage((String) this.data.get("clientType"), (String) this.data.get("token"));
+                    break;
                 case "status":
                     messageBuilder = new StatusMessage((Boolean) this.data.get("success"));
                     break;
                 case "command":
                     messageBuilder = new CommandMessage((String) this.data.get("command"));
                     break;
+                case "clientCommand":
+                    ClientMessageBuilder clientMessageBuilder =
+                            new ClientMessageBuilder((String) this.data.get("commandType"), (String) this.data.get("command"));
+                    messageBuilder = clientMessageBuilder.makeSendableCommand();
+                    break;
                 default:
+                    System.out.println("Got undefined typed message: " + this.data.toString());
                     messageBuilder = new UndefinedMessage("undefined");
                     break;
             }

@@ -6,6 +6,8 @@ import org.json.JSONObject;
 
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Main {
     /*public static class ImageCanvas extends Canvas {
@@ -95,6 +97,7 @@ public class Main {
 
 
         System.out.println("Starting server...");
+
         try {
             ServerSocket server = new ServerSocket(7777);
             while (true) {
