@@ -14,7 +14,10 @@ public class CommandMessage extends Message {
     @Override
     public String toJson() {
         return new JSONObject()
+                .put("type", "command")
                 .put("command", this.command)
+                .put("from", this.getFromToken())
+                .put("target", this.getTargetToken())
                 .toString();
     }
 }

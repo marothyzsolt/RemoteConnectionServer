@@ -15,7 +15,7 @@ public class ConnectedClient {
         clientList.remove(token);
     }
 
-    public static void get(String token) {
-        clientList.get(token);
+    public static ClientConnection get(String token) {
+        return clientList.get(token);
     }
 }

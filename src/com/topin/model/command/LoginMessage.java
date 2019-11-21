@@ -16,6 +16,7 @@ public class LoginMessage extends Message {
     @Override
     public String toJson() {
         return new JSONObject()
+                .put("type", "login")
                 .put("clientType", this.clientType)
                 .put("token", this.token)
                 .toString();

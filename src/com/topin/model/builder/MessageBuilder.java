@@ -32,6 +32,9 @@ public class MessageBuilder extends BuilderBase {
                 case "clientCommand":
                     ClientMessageBuilder clientMessageBuilder =
                             new ClientMessageBuilder((String) this.data.get("commandType"), (String) this.data.get("command"));
+                    clientMessageBuilder.setFromToken((String) this.data.get("from"));
+                    clientMessageBuilder.setTargetToken((String) this.data.get("target"));
+
                     messageBuilder = clientMessageBuilder.makeSendableCommand();
                     break;
                 default:
