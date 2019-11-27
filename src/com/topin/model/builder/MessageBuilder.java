@@ -29,6 +29,21 @@ public class MessageBuilder extends BuilderBase {
                 case "command":
                     messageBuilder = new CommandMessage((String) this.data.get("command"));
                     break;
+                case "init":
+                    messageBuilder = new InitMessage(
+                            (String) this.data.get("hostname"),
+                            (String) this.data.get("cpuName"),
+                            (String) this.data.get("localIp"),
+                            (String) this.data.get("osName"),
+                            (String) this.data.get("osVersion"),
+                            (String) this.data.get("biosVersion"),
+                            (Double) this.data.get("cpuUsage"),
+                            (Integer) this.data.get("ramMax"),
+                            (Integer) this.data.get("ramUsage"),
+                            (String) this.data.get("driveUsage"),
+                            (String) this.data.get("taskList")
+                    );
+                    break;
                 case "clientCommand":
                     ClientMessageBuilder clientMessageBuilder =
                             new ClientMessageBuilder((String) this.data.get("commandType"), (String) this.data.get("command"));

@@ -114,8 +114,11 @@ public class ClientConnection implements Runnable {
         ClientData currentClient = LoginClientList.get(this.currentClientToken);
         currentClient.setClientType(message.getClientType());
 
-        System.out.println(message.getClientType());
-
+        if (message.getClientType().equals("server")) {
+            //ClientData targetClient LoginClientList.findClientByUsername(currentClient.getUsername());
+        } else {
+            //LoginClientList.findServerByUsername(currentClient.getUsername());
+        }
         //if (message.getClientType().equals("server"))
     }
 

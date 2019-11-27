@@ -10,15 +10,15 @@ public class InitMessage extends Message {
     private String osName;
     private String osVersion;
     private String biosVersion;
-    private Float cpuUsage;
+    private Double cpuUsage;
     private Integer ramMax;
     private Integer ramUsage;
     private String driveUsage; // Json: C: 11GB/256GB  USED/ALL
 
     private String taskList; // JSON: {count: 121, [{name: 'Total Commander', status: 'idle', 'pid': 12331}]}
 
-    public InitMessage(String type, String hostname, String cpuName, String localIp, String osName, String osVersion, String biosVersion, Float cpuUsage, Integer ramMax, Integer ramUsage, String driveUsage, String taskList) {
-        super(type);
+    public InitMessage( String hostname, String cpuName, String localIp, String osName, String osVersion, String biosVersion, Double cpuUsage, Integer ramMax, Integer ramUsage, String driveUsage, String taskList) {
+        super("init");
         this.hostname = hostname;
         this.cpuName = cpuName;
         this.localIp = localIp;
@@ -36,7 +36,7 @@ public class InitMessage extends Message {
     @Override
     public String toJson() {
         return new JSONObject()
-                .put("type", "initMessage")
+                .put("type", "init")
                 .put("success", this.hostname)
                 .put("cpuName", this.cpuName)
                 .put("localIp", this.localIp)
