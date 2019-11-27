@@ -29,6 +29,9 @@ public class MessageBuilder extends BuilderBase {
                 case "command":
                     messageBuilder = new CommandMessage((String) this.data.get("command"));
                     break;
+                case "request":
+                    messageBuilder = new RequestMessage((String) this.data.get("request"), (String) this.data.get("parameter"));
+                    break;
                 case "init":
                     messageBuilder = new InitMessage(
                             (String) this.data.get("hostname"),
