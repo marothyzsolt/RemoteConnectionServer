@@ -2,7 +2,12 @@ package com.topin;
 
 import com.topin.model.builder.MessageBuilder;
 import com.topin.services.ClientConnection;
+import com.topin.services.Log;
+import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.PropertyConfigurator;
 import org.json.JSONObject;
+import org.slf4j.LoggerFactory;
 
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -95,15 +100,23 @@ public class Main {
         System.out.println(jsonObject.get("command"));
         System.exit(0);*/
 
+        Log.configure();
 
-        System.out.println("Starting server...");
+        Main main = new Main();
+        main.startApplication();
+
+        //PropertyConfigurator.configure("resources/log4j.xml");
+    }
+
+    private void startApplication() {
+        Log.write(this).info("Start server...");
 
         try {
             ServerSocket server = new ServerSocket(7777);
             while (true) {
                 Socket client = server.accept();
                 new Thread(new ClientConnection(client)).start();
-                System.out.println("Client connected: " + client);
+                Log.write(this).info("Client connected: " + client);
             }
         } catch (Exception e) {
             e.printStackTrace();

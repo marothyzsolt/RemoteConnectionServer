@@ -32,7 +32,7 @@ public class ScreenCapture implements Runnable {
         }*/
 
         while(true) {
-            String message = new StatusMessage(true).toJson();
+            String message = new StatusMessage(true, "").toJson();
             clientMessageDriver.send(message);
             try {
                 Thread.sleep(1500);

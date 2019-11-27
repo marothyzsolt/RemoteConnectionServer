@@ -2,10 +2,7 @@ package com.topin.model.builder;
 
 import com.topin.helpers.JsonHelper;
 import com.topin.model.Message;
-import com.topin.model.command.CommandMessage;
-import com.topin.model.command.LoginMessage;
-import com.topin.model.command.StatusMessage;
-import com.topin.model.command.UndefinedMessage;
+import com.topin.model.command.*;
 import com.topin.model.contracts.MessageContract;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -23,8 +20,11 @@ public class MessageBuilder extends BuilderBase {
                 case "login":
                     messageBuilder = new LoginMessage((String) this.data.get("clientType"), (String) this.data.get("token"));
                     break;
+                case "loginConnect":
+                    messageBuilder = new LoginConnectMessage((String) this.data.get("username"), (String) this.data.get("password"));
+                    break;
                 case "status":
-                    messageBuilder = new StatusMessage((Boolean) this.data.get("success"));
+                    messageBuilder = new StatusMessage((Boolean) this.data.get("success"), (String) this.data.get("message"));
                     break;
                 case "command":
                     messageBuilder = new CommandMessage((String) this.data.get("command"));
