@@ -9,12 +9,21 @@ public class ClientData {
     private String password;
     private String token;
     private ClientConnection clientConnection;
+    private String clientType;
 
     public ClientData(String username, String password, String token, ClientConnection clientConnection) {
         this.username = username;
         this.password = password;
         this.token = token;
         this.clientConnection = clientConnection;
+    }
+
+    public String getClientType() {
+        return clientType;
+    }
+
+    public void setClientType(String clientType) {
+        this.clientType = clientType;
     }
 
     public ClientConnection getClientConnection() {

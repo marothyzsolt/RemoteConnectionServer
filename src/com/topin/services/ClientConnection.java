@@ -66,9 +66,11 @@ public class ClientConnection implements Runnable {
         do {
             Message message = MessageBuilder.build(this.bufferedReader.readLine());
             if (message instanceof LoginMessage) {
-                Log.write(this).info("Successful Token login with " + ((LoginMessage) message).getClientType() + " device with token: " + ((LoginMessage) message).getToken());
+                Log.write(this).info("Successful Token login with [" + ((LoginMessage) message).getClientType() + "] device with token: " + ((LoginMessage) message).getToken());
                 token = ((LoginMessage) message).getToken();
                 this.sendStatusMessage(true);
+
+                successfullyStoredClientToken((LoginMessage) message);
             } else {
                 Log.write(this).info("Client sent message before login: " + this.client.getInetAddress() + " - " + (message != null ? message.toJson() : "NULL"));
                 this.sendStatusMessage(false);
@@ -106,6 +108,15 @@ public class ClientConnection implements Runnable {
         } while (! successLogin);
 
         return username;
+    }
+
+    private void successfullyStoredClientToken(LoginMessage message) {
+        ClientData currentClient = LoginClientList.get(this.currentClientToken);
+        currentClient.setClientType(message.getClientType());
+
+        System.out.println(message.getClientType());
+
+        //if (message.getClientType().equals("server"))
     }
 
     private void successfullyClientLoginHandler(String username, String password) {
