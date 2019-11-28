@@ -34,6 +34,9 @@ public class MessageBuilder extends BuilderBase {
                     messageBuilder = new RequestMessage((String) this.data.get("request"), (String) this.data.get("parameter"));
                     break;
                 case "init":
+                    long ramMax = (long) this.data.get("ramMax");
+                    int ramUsage = (int) this.data.get("ramUsage");
+                    long ramUsageLongType = Long.valueOf(ramUsage);
                     messageBuilder = new InitMessage(
                             (String) this.data.get("hostname"),
                             (String) this.data.get("cpuName"),
@@ -42,10 +45,11 @@ public class MessageBuilder extends BuilderBase {
                             (String) this.data.get("osVersion"),
                             (String) this.data.get("biosVersion"),
                             (Double) this.data.get("cpuUsage"),
-                            (Integer) this.data.get("ramMax"),
-                            (Integer) this.data.get("ramUsage"),
+                            ramMax,
+                            ramUsageLongType,
                             (String) this.data.get("driveUsage"),
-                            (String) this.data.get("taskList")
+                            (String) this.data.get("taskList"),
+                            (String) this.data.get("backgroundImage")
                     );
                     break;
                 case "clientCommand":
@@ -81,7 +85,7 @@ public class MessageBuilder extends BuilderBase {
             Message messageObject = (Message) messageBuilder.get();
             return messageObject;
         } catch (JSONException err){
-            Log.write("MessageBuilder").error("Json exception on message." + jsonData);
+            Log.write("MessageBuilder").error("Json exception on message. " + jsonData);
         }
         return null;
     }

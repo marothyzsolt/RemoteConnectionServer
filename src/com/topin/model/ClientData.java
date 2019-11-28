@@ -58,4 +58,12 @@ public class ClientData {
         this.token = token;
     }
 
+    @Override
+    public String toString() {
+        return "ClientData{" +
+                "username='" + username + '\'' +
+                ", token='" + token + '\'' +
+                ", clientType='" + clientType + '\'' +
+                '}';
+    }
 }

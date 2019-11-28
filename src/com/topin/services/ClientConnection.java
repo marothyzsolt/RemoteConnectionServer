@@ -46,16 +46,39 @@ public class ClientConnection implements Runnable {
             if (LoginClientList.get(clientToken) == null) {
                 Log.write(this).error("The authentication was failed, the server drop the connection!");
                 this.sendStatusMessage(false, "The authentication was failed, the server drop the connection!");
+
+                this.client.close();
             } else {
                 Log.write(this).info("Successful authentication! Starting to listen the client...");
+
+                // Send a success status to currently connected user
+                //this.sendStatusMessage(true);
+                this.listen();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.write(this).error(e.getMessage());
+            if (this.getCurrentClientData() != null) {
+                Log.write(this).info("Connection closed (" + this.client + ") [" + this.getCurrentClientData() + "]");
+            } else {
+                Log.write(this).info("Connection closed (" + this.client + ")");
+            }
+            if (this.getCurrentClientData() != null) {
+                if (this.getCurrentClientData().getClientType().equals("server")) {
+                    if (LoginClientList.findClientByUsername(this.getCurrentClientData().getUsername()) != null) {
+                        LoginClientList.findClientByUsername(this.getCurrentClientData().getUsername()).getClientConnection().setTargetClientData(null);
+                    }
+                } else {
+                    if (LoginClientList.findServerByUsername(this.getCurrentClientData().getUsername()) != null) {
+                        LoginClientList.findServerByUsername(this.getCurrentClientData().getUsername()).getClientConnection().setTargetClientData(null);
+                    }
+                }
             }
 
-            // Send a success status to currently connected user
-            //this.sendStatusMessage(true);
-
-            this.listen();
-        } catch (Exception e) {
-            Log.write(this).info("Connection closed (" + this.client + ")");
+            if (this.currentClientToken != null) {
+                Log.write(this).info("Remove connected client from ClientList: " + this.currentClientToken);
+                LoginClientList.remove(this.currentClientToken);
+            }
         }
     }
 
@@ -116,13 +139,23 @@ public class ClientConnection implements Runnable {
 
         ClientData targetClient;
 
-        if (message.getClientType().equals("server")) {
+        if (message.getClientType().equals("server")) { // Server connected
             targetClient = LoginClientList.findClientByUsername(currentClient.getUsername());
-        } else {
+        } else { // Client Connected
             targetClient = LoginClientList.findServerByUsername(currentClient.getUsername());
         }
 
         this.targetClientData = targetClient;
+    }
+
+    public void tryToAssociateTargetClientData() {
+        if (this.targetClientData == null) {
+            if (this.getCurrentClientData().getClientType().equals("server")) {
+                this.targetClientData = LoginClientList.findClientByUsername(this.getCurrentClientData().getUsername());
+            } else {
+                this.targetClientData = LoginClientList.findServerByUsername(this.getCurrentClientData().getUsername());
+            }
+        }
     }
 
     private void successfullyClientLoginHandler(String username, String password) {
@@ -145,6 +178,9 @@ public class ClientConnection implements Runnable {
         String message;
         do {
             message = this.bufferedReader.readLine();
+
+            // If target client not defined yet, it's try to define it, and store
+            tryToAssociateTargetClientData();
 
             Message messageObject = MessageBuilder.build(message);
             this.onMessage(messageObject);
@@ -197,4 +233,9 @@ public class ClientConnection implements Runnable {
     public ClientData getCurrentClientData() {
         return LoginClientList.get(this.currentClientToken);
     }
+
+    public void setTargetClientData(ClientData targetClientData) {
+        this.targetClientData = targetClientData;
+    }
+
 }

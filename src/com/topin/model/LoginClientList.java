@@ -30,7 +30,15 @@ public class LoginClientList {
 
     public static ClientData findByUsername(String type, String username) {
         for (Map.Entry<String, ClientData> entry : clientList.entrySet()) {
-            if (entry.getValue().getClientType().equals(type) && entry.getValue().getUsername().equals(username)) {
+            if (
+                    entry.
+                            getValue().
+                            getClientType().
+                            equals(type) &&
+                            entry.
+                                    getValue().
+                                    getUsername().
+                                    equals(username)) {
                 return entry.getValue();
             }
         }
