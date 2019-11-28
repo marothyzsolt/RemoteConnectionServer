@@ -4,6 +4,7 @@ import com.topin.helpers.JsonHelper;
 import com.topin.model.Message;
 import com.topin.model.command.*;
 import com.topin.model.contracts.MessageContract;
+import com.topin.services.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -56,13 +57,15 @@ public class MessageBuilder extends BuilderBase {
                     messageBuilder = clientMessageBuilder.makeSendableCommand();
                     break;
                 default:
-                    System.out.println("Got undefined typed message: " + this.data.toString());
+                    Log.write(this).error("Got undefined typed message: " + this.data.toString());
                     messageBuilder = new UndefinedMessage("undefined");
                     break;
             }
             return messageBuilder;
         } catch (NullPointerException e) {
-            System.out.println("Error in json string (not syntax error). Called undefined parameter inside json object.");
+            Log.write(this).error("Error in json string (not syntax error). Called undefined parameter inside json object. Type: " + this.type + "; Json: " + this.data.toString());
+        } catch (ClassNotFoundException e) {
+            Log.write(this).error("Maybe clientCommand type not found, please modify ClientMessageBuilder class: " + e.getMessage());
         }
         return new UndefinedMessage("undefined");
     }
@@ -71,14 +74,14 @@ public class MessageBuilder extends BuilderBase {
         try {
             JSONObject jsonObject = new JSONObject(jsonData);
             if (! jsonObject.has("type")) {
-                System.out.println("The JSON do not have 'type' parameter: " + jsonData);
+                Log.write("MessageBuilder").error("The JSON do not have 'type' parameter: " + jsonData);
             }
             MessageBuilder messageBuilder = new MessageBuilder((String) jsonObject.get("type"));
             messageBuilder.setData(JsonHelper.jsonObjectToHashMap(jsonObject));
             Message messageObject = (Message) messageBuilder.get();
             return messageObject;
         } catch (JSONException err){
-            System.out.println("Json exception on message: " + jsonData);
+            Log.write("MessageBuilder").error("Json exception on message." + jsonData);
         }
         return null;
     }

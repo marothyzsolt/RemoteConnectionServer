@@ -7,20 +7,25 @@ import com.topin.model.Message;
 
 public class ClientConnectionMessage implements Runnable {
     private Message clientMessage;
-    private ClientMessageDriver client;
+    private ClientConnection baseClientConnection;
 
-    ClientConnectionMessage(Message clientMessage, ClientMessageDriver client) {
+    ClientConnectionMessage(Message clientMessage, ClientConnection baseClientConnection) {
         this.clientMessage = clientMessage;
-        this.client = client;
+        this.baseClientConnection = baseClientConnection;
     }
 
     public void run() {
         System.out.println("Received message: " + this.clientMessage);
 
-        if (this.clientMessage.getTargetToken() != null && this.clientMessage.getTargetToken().length() > 2) {
-            ClientConnection targetClient = ConnectedClient.get(this.clientMessage.getTargetToken());
+        if (this.clientMessage.getTargetToken() != null && this.clientMessage.getTargetToken().length() > 0) {
+            ClientConnection targetClient = null;
+            if (this.clientMessage.getTargetToken().equals("1")) {
+                targetClient = this.baseClientConnection.getTargetClientData().getClientConnection();
+                Log.write(this).info("Received message send to target client token: " + targetClient.getCurrentClientToken());
+            }
+            //ClientConnection targetClient = ConnectedClient.get(this.clientMessage.getTargetToken());
             if (targetClient == null) {
-                System.out.println("The selected target token not exists: " + this.clientMessage.getTargetToken());
+                Log.write(this).error("The selected target token not exists: " + this.clientMessage.getTargetToken());
             } else {
                 // Send message to target client
                 targetClient.getClientMessageDriver().send(this.clientMessage.toString());

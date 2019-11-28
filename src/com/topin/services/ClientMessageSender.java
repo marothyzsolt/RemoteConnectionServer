@@ -10,9 +10,11 @@ import java.io.StringReader;
 public class ClientMessageSender implements Runnable {
 
     private ClientMessageDriver clientMessageDriver;
+    private ClientConnection clientConnection;
 
-    public ClientMessageSender(ClientMessageDriver clientMessageDriver) {
+    public ClientMessageSender(ClientMessageDriver clientMessageDriver, ClientConnection clientConnection) {
         this.clientMessageDriver = clientMessageDriver;
+        this.clientConnection = clientConnection;
     }
 
     public void run() {
@@ -35,6 +37,16 @@ public class ClientMessageSender implements Runnable {
         StringReader stringReader = new StringReader(o.toString());
 
         System.out.println("Sending: " + o);
+        if (this.clientConnection.getCurrentClientData() != null) {
+            Log.write(this)
+                    .info("Sending to [" + this.clientConnection.getCurrentClientData().getUsername() + "] [" + this.clientConnection.getCurrentClientData().getClientType() + "]: " + o);
+        } else if (this.clientConnection.getCurrentClientToken() != null) {
+            Log.write(this)
+                    .info("Sending to [" + this.clientConnection.getCurrentClientToken() + "]: " + o);
+        } else {
+            Log.write(this)
+                    .info("Sending to [" + this.clientMessageDriver.getClient().toString() + "]: " + o);
+        }
 
         OutputStream outputStream = new BufferedOutputStream(this.clientMessageDriver.getClient().getOutputStream());
         int c;

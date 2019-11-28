@@ -3,10 +3,8 @@ package com.topin.services;
 import com.topin.Utils;
 import com.topin.driver.ClientMessageDriver;
 import com.topin.model.ClientData;
-import com.topin.model.ConnectedClient;
 import com.topin.model.LoginClientList;
 import com.topin.model.Message;
-import com.topin.model.builder.ClientMessageBuilder;
 import com.topin.model.builder.MessageBuilder;
 import com.topin.model.command.LoginConnectMessage;
 import com.topin.model.command.LoginMessage;
@@ -22,6 +20,8 @@ public class ClientConnection implements Runnable {
 
     private String currentClientToken = null;
 
+    private ClientData targetClientData;
+
     public ClientConnection(Socket client) throws IOException {
         InputStream clientInputStream = client.getInputStream();
 
@@ -31,7 +31,7 @@ public class ClientConnection implements Runnable {
     }
 
     public void run() {
-        new Thread(new ClientMessageSender(this.clientMessageDriver)).start();
+        new Thread(new ClientMessageSender(this.clientMessageDriver, this)).start();
         //new Thread(new ScreenCapture(this.clientMessageDriver)).start();
 
         try {
@@ -114,12 +114,15 @@ public class ClientConnection implements Runnable {
         ClientData currentClient = LoginClientList.get(this.currentClientToken);
         currentClient.setClientType(message.getClientType());
 
+        ClientData targetClient;
+
         if (message.getClientType().equals("server")) {
-            //ClientData targetClient LoginClientList.findClientByUsername(currentClient.getUsername());
+            targetClient = LoginClientList.findClientByUsername(currentClient.getUsername());
         } else {
-            //LoginClientList.findServerByUsername(currentClient.getUsername());
+            targetClient = LoginClientList.findServerByUsername(currentClient.getUsername());
         }
-        //if (message.getClientType().equals("server"))
+
+        this.targetClientData = targetClient;
     }
 
     private void successfullyClientLoginHandler(String username, String password) {
@@ -161,7 +164,7 @@ public class ClientConnection implements Runnable {
             }
         }
 
-        new Thread(new ClientConnectionMessage(messageObject, this.clientMessageDriver)).start();
+        new Thread(new ClientConnectionMessage(messageObject, this)).start();
 
         //this.sendStatusMessage(true);
     }
@@ -181,5 +184,17 @@ public class ClientConnection implements Runnable {
 
     public ClientMessageDriver getClientMessageDriver() {
         return this.clientMessageDriver;
+    }
+
+    public ClientData getTargetClientData() {
+        return targetClientData;
+    }
+
+    public String getCurrentClientToken() {
+        return currentClientToken;
+    }
+
+    public ClientData getCurrentClientData() {
+        return LoginClientList.get(this.currentClientToken);
     }
 }
