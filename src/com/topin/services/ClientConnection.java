@@ -6,8 +6,8 @@ import com.topin.model.ClientData;
 import com.topin.model.LoginClientList;
 import com.topin.model.Message;
 import com.topin.model.builder.MessageBuilder;
-import com.topin.model.command.LoginConnectMessage;
-import com.topin.model.command.LoginMessage;
+import com.topin.model.command.RequestMessage;
+import com.topin.model.command.StatusMessage;
 
 import java.io.*;
 import java.net.Socket;
@@ -17,10 +17,9 @@ public class ClientConnection implements Runnable {
     private final ClientMessageDriver clientMessageDriver;
     private Socket client;
     private BufferedReader bufferedReader;
-
     private String currentClientToken = null;
-
     private ClientData targetClientData;
+    private LoginBlocker loginBlocker;
 
     public ClientConnection(Socket client) throws IOException {
         InputStream clientInputStream = client.getInputStream();
@@ -34,30 +33,31 @@ public class ClientConnection implements Runnable {
         new Thread(new ClientMessageSender(this.clientMessageDriver, this)).start();
         //new Thread(new ScreenCapture(this.clientMessageDriver)).start();
 
+        this.loginBlocker = new LoginBlocker(this);
+
         try {
             // Wait for login from client
-            String x = this.waitLoginClient();
-            Log.write(this).warn(x);
+            String x = loginBlocker.waitLoginClient();
+            //Log.write(this).warn(x);
             //ConnectedClient.add(clientToken, this);
 
             // Wait for token from client (for authentication)
-            String clientToken = this.waitToken();
+            String clientToken = loginBlocker.waitToken();
             //ConnectedClient.add(clientToken, this);
             if (LoginClientList.get(clientToken) == null) {
                 Log.write(this).error("The authentication was failed, the server drop the connection!");
-                this.sendStatusMessage(false, "The authentication was failed, the server drop the connection!");
+                this.getCurrentClientData().sendStatusMessage(false, "The authentication was failed, the server drop the connection!");
 
                 this.client.close();
             } else {
-                Log.write(this).info("Successful authentication! Starting to listen the client...");
+                Log.write(this).info("Successful authentication! Starting to listen the client: " + this.getCurrentClientData());
 
-                // Send a success status to currently connected user
-                //this.sendStatusMessage(true);
                 this.listen();
             }
         } catch (Exception e) {
             e.printStackTrace();
             Log.write(this).error(e.getMessage());
+
             if (this.getCurrentClientData() != null) {
                 Log.write(this).info("Connection closed (" + this.client + ") [" + this.getCurrentClientData() + "]");
             } else {
@@ -82,72 +82,6 @@ public class ClientConnection implements Runnable {
         }
     }
 
-    private String waitToken() throws IOException {
-        Log.write(this).info("Wait for login token for " + this.client.getInetAddress());
-
-        String token = null;
-        do {
-            Message message = MessageBuilder.build(this.bufferedReader.readLine());
-            if (message instanceof LoginMessage) {
-                Log.write(this).info("Successful Token login with [" + ((LoginMessage) message).getClientType() + "] device with token: " + ((LoginMessage) message).getToken());
-                token = ((LoginMessage) message).getToken();
-                this.sendStatusMessage(true);
-
-                successfullyStoredClientToken((LoginMessage) message);
-            } else {
-                Log.write(this).info("Client sent message before login: " + this.client.getInetAddress() + " - " + (message != null ? message.toJson() : "NULL"));
-                this.sendStatusMessage(false);
-            }
-        } while (token == null);
-
-        return token;
-    }
-
-    private String waitLoginClient() throws IOException {
-        Log.write(this).info("Wait for login client from " + this.client.getInetAddress());
-
-        String username = null;
-        String password = null;
-        boolean successLogin = false;
-
-        do {
-            Message message = MessageBuilder.build(this.bufferedReader.readLine());
-            if (message instanceof LoginConnectMessage) {
-                Log.write(this).info("Client try login with username: " + ((LoginConnectMessage) message).getUsername());
-                username = ((LoginConnectMessage) message).getUsername();
-                password = ((LoginConnectMessage) message).getPassword();
-
-                successLogin = this.checkLoginData(username, password);
-                if (! successLogin) {
-                    this.sendStatusMessage(false, "Incorrect login data");
-                } else {
-                    this.sendStatusMessage(true, "Successfully logged in");
-                    this.successfullyClientLoginHandler(username, password);
-                }
-            } else {
-                Log.write(this).info("Client sent message before login client: " + this.client.getInetAddress() + " - " + (message != null ? message.toJson() : "NULL"));
-                this.sendStatusMessage(false);
-            }
-        } while (! successLogin);
-
-        return username;
-    }
-
-    private void successfullyStoredClientToken(LoginMessage message) {
-        ClientData currentClient = LoginClientList.get(this.currentClientToken);
-        currentClient.setClientType(message.getClientType());
-
-        ClientData targetClient;
-
-        if (message.getClientType().equals("server")) { // Server connected
-            targetClient = LoginClientList.findClientByUsername(currentClient.getUsername());
-        } else { // Client Connected
-            targetClient = LoginClientList.findServerByUsername(currentClient.getUsername());
-        }
-
-        this.targetClientData = targetClient;
-    }
-
     public void tryToAssociateTargetClientData() {
         if (this.targetClientData == null) {
             if (this.getCurrentClientData().getClientType().equals("server")) {
@@ -158,20 +92,18 @@ public class ClientConnection implements Runnable {
         }
     }
 
-    private void successfullyClientLoginHandler(String username, String password) {
+    public void successfullyClientLoginHandler(String username, String password) {
         if (this.currentClientToken == null || this.currentClientToken.length() != 32) {
             this.currentClientToken = Utils.randomGetNumericString(32);
         }
-        this.sendStatusMessage(true, this.currentClientToken);
         ClientData clientData = new ClientData(username, password, this.currentClientToken, this);
 
         // Add if not exists
         LoginClientList.add(this.currentClientToken, clientData);
-        Log.write(this).info("Store client data with token: " + this.currentClientToken);
-    }
 
-    private boolean checkLoginData(String username, String password) {
-        return (username.equals("admin") && password.equals("admin"));
+        // After stored the client data into the LoginClientList, the center send back the success message to client.
+        this.getCurrentClientData().sendStatusMessage(true, this.currentClientToken);
+        Log.write(this).info("Store client [" + username + " - " + clientData.getClientType() +"] data with token: " + this.currentClientToken);
     }
 
     private void listen() throws IOException {
@@ -182,6 +114,8 @@ public class ClientConnection implements Runnable {
             // If target client not defined yet, it's try to define it, and store
             tryToAssociateTargetClientData();
 
+            //this.getClientMessageDriver().send(new RequestMessage("init", null));
+
             Message messageObject = MessageBuilder.build(message);
             this.onMessage(messageObject);
         } while (message != null);
@@ -189,33 +123,15 @@ public class ClientConnection implements Runnable {
 
     private void onMessage(Message messageObject) {
         // If the client login message, but already logged in
-        if (messageObject != null && (messageObject.getType().equals("login") || messageObject.getType().equals("loginConnect"))) {
-            ClientData clientData = LoginClientList.get(currentClientToken);
-            if (clientData != null) {
-                Log.write(this).info("The client tried to login when already logged in. The server sent the token to the client.");
-                this.sendStatusMessage(true, "Already logged in");
-                this.successfullyClientLoginHandler(clientData.getUsername(), clientData.getPassword());
-            } else {
-                Log.write(this).error("ERROR: The server got a login message, when the client already logged in, but the client not exists in [logged client] list of server.");
-            }
+        if (this.loginBlocker.checkOnLoginMessageByLoggedInClient(messageObject)) {
+            return; // Because the user sent a login/loginConnect message, and it should not handle by the main message listener
         }
 
         new Thread(new ClientConnectionMessage(messageObject, this)).start();
-
-        //this.sendStatusMessage(true);
     }
 
-    private void sendStatusMessage(boolean status) {
-        this.sendStatusMessage(status, "null");
-    }
-
-    private void sendStatusMessage(boolean status, String message) {
-        MessageBuilder builder = (MessageBuilder)
-                new MessageBuilder("status")
-                        .add("success", status)
-                        .add("message", message);
-
-        this.clientMessageDriver.send(builder.get());
+    public ClientData getCurrentClientData() {
+        return LoginClientList.get(this.currentClientToken);
     }
 
     public ClientMessageDriver getClientMessageDriver() {
@@ -230,12 +146,15 @@ public class ClientConnection implements Runnable {
         return currentClientToken;
     }
 
-    public ClientData getCurrentClientData() {
-        return LoginClientList.get(this.currentClientToken);
-    }
-
     public void setTargetClientData(ClientData targetClientData) {
         this.targetClientData = targetClientData;
     }
 
+    public BufferedReader getBufferedReader() {
+        return bufferedReader;
+    }
+
+    public Socket getClient() {
+        return client;
+    }
 }

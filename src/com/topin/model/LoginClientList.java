@@ -33,6 +33,9 @@ public class LoginClientList {
             if (
                     entry.
                             getValue().
+                            getClientType() != null &&
+                    entry.
+                            getValue().
                             getClientType().
                             equals(type) &&
                             entry.

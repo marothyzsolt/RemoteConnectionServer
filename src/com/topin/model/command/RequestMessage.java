@@ -20,6 +20,8 @@ public class RequestMessage extends Message {
                 .put("type", "request")
                 .put("request", this.request)
                 .put("parameter", this.parameter)
+                .put("from", this.getFromToken())
+                .put("target", this.getTargetToken())
                 .toString();
     }
 }

@@ -25,7 +25,7 @@ public class ClientMessageSender implements Runnable {
                 //System.out.println(o);
             }
         } catch (InterruptedException | IOException e) {
-            System.out.println(e.getMessage());
+            Log.write(this).error(e.getMessage());
         }
     }
 
@@ -36,7 +36,7 @@ public class ClientMessageSender implements Runnable {
 
         StringReader stringReader = new StringReader(o.toString());
 
-        System.out.println("Sending: " + o);
+///        System.out.println("Sending: " + o);
         if (this.clientConnection.getCurrentClientData() != null) {
             Log.write(this)
                     .info("Sending to [" + this.clientConnection.getCurrentClientData().getUsername() + "] [" + this.clientConnection.getCurrentClientData().getClientType() + "]: " + o);

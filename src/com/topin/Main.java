@@ -1,6 +1,11 @@
 package com.topin;
 
+import com.topin.database.MysqlConn;
+import com.topin.database.repositories.UserRepository;
+import com.topin.model.Message;
 import com.topin.model.builder.MessageBuilder;
+import com.topin.model.command.StatusMessage;
+import com.topin.model.messagers.BaseMessager;
 import com.topin.services.ClientConnection;
 import com.topin.services.Log;
 import org.apache.log4j.BasicConfigurator;
@@ -9,8 +14,13 @@ import org.apache.log4j.PropertyConfigurator;
 import org.json.JSONObject;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -78,6 +88,9 @@ public class Main {
     }*/
 
     public static void main(String[] args) {
+        Log.configure();
+
+
         /*Canvas csStatusImage = new ImageCanvas();
         csStatusImage.setBounds(393, 36, 200, 200);
 
@@ -100,15 +113,34 @@ public class Main {
         System.out.println(jsonObject.get("command"));
         System.exit(0);*/
 
-        Log.configure();
+        // db pw: DaxDgggdfR13@dsxxrgrhHHrdxt654
+
+        MysqlConn.setup();
+
 
         Main main = new Main();
         main.startApplication();
 
+        generateCallCustomClass();
         //PropertyConfigurator.configure("resources/log4j.xml");
     }
 
+    private static void generateCallCustomClass() {
+
+        /*
+        try {
+            clazz = Class.forName(className);
+            Constructor tc = clazz.getConstructor(Message.class, ClientConnection.class);
+            BaseMessager baseMessager = (BaseMessager) (tc.newInstance(new StatusMessage(true, ""), new ClientConnection(new Socket())));
+            baseMessager.handle();
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | IOException e) {
+            e.printStackTrace();
+        }*/
+    }
+
     private void startApplication() {
+        MysqlConn.setup();
+
         Log.write(this).info("Start server...");
 
         try {
@@ -120,6 +152,7 @@ public class Main {
             }
         } catch (Exception e) {
             e.printStackTrace();
+            MysqlConn.close();
         }
     }
 }

@@ -18,6 +18,9 @@ public class MessageBuilder extends BuilderBase {
         MessageContract messageBuilder;
         try {
             switch (this.type) {
+                case "noTargetServer":
+                    messageBuilder = new NoTargetServerMessage();
+                    break;
                 case "login":
                     messageBuilder = new LoginMessage((String) this.data.get("clientType"), (String) this.data.get("token"));
                     break;
@@ -32,11 +35,20 @@ public class MessageBuilder extends BuilderBase {
                     break;
                 case "request":
                     messageBuilder = new RequestMessage((String) this.data.get("request"), (String) this.data.get("parameter"));
+                    ((RequestMessage) messageBuilder).setFromToken((String) this.data.get("from"));
+                    ((RequestMessage) messageBuilder).setTargetToken((String) this.data.get("target"));
                     break;
                 case "init":
                     long ramMax = (long) this.data.get("ramMax");
                     int ramUsage = (int) this.data.get("ramUsage");
                     long ramUsageLongType = Long.valueOf(ramUsage);
+
+                    String cpuUsage = (this.data.get("cpuUsage")) + "";
+                    if (! cpuUsage.contains(".")) {
+                        cpuUsage += ".0";
+                    }
+                    Double cpuUsageDouble = Double.valueOf(cpuUsage);
+
                     messageBuilder = new InitMessage(
                             (String) this.data.get("hostname"),
                             (String) this.data.get("cpuName"),
@@ -44,13 +56,20 @@ public class MessageBuilder extends BuilderBase {
                             (String) this.data.get("osName"),
                             (String) this.data.get("osVersion"),
                             (String) this.data.get("biosVersion"),
-                            (Double) this.data.get("cpuUsage"),
+                            cpuUsageDouble,
                             ramMax,
                             ramUsageLongType,
                             (String) this.data.get("driveUsage"),
                             (String) this.data.get("taskList"),
                             (String) this.data.get("backgroundImage")
                     );
+
+                    if (this.data.containsKey("from")) { // TODO: REFACTOR
+                        ((InitMessage) messageBuilder).setFromToken((String) this.data.get("from"));
+                    }
+                    if (this.data.containsKey("target")) {
+                        ((InitMessage) messageBuilder).setTargetToken((String) this.data.get("target"));
+                    }
                     break;
                 case "clientCommand":
                     ClientMessageBuilder clientMessageBuilder =
@@ -86,6 +105,8 @@ public class MessageBuilder extends BuilderBase {
             return messageObject;
         } catch (JSONException err){
             Log.write("MessageBuilder").error("Json exception on message. " + jsonData);
+        } catch (Exception e) {
+            System.out.println("ERROR with jsonData: " + jsonData);
         }
         return null;
     }
