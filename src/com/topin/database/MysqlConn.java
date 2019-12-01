@@ -13,7 +13,7 @@ public class MysqlConn {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
             connection = DriverManager.getConnection(
-                    "jdbc:mysql://147.135.149.163:3306/remotelly",
+                    "jdbc:mysql://147.135.149.163:3306/remotelly?autoReconnect=true",
                     "remotelly",
                     "DaxDgggdfR13@dsxxrgrhHHrdxt654"
             );

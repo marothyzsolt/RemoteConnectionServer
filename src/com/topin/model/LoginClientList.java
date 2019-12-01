@@ -47,4 +47,8 @@ public class LoginClientList {
         }
         return null;
     }
+
+    public static HashMap<String, ClientData> getClientList() {
+        return clientList;
+    }
 }

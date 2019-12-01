@@ -13,14 +13,14 @@ public class InitMessage extends Message {
     private String osVersion;
     private String biosVersion;
     private Double cpuUsage;
-    private Long ramUsage;
-    private Long ramMax;
+    private String ramUsage;
+    private String ramMax;
     private String driveUsage; // Json: C: 11GB/256GB  USED/ALL
     private String backgroundImage;
 
     private String taskList; // JSON: {count: 121, [{name: 'Total Commander', status: 'idle', 'pid': 12331}]}
 
-    public InitMessage(String hostname, String cpuName, String localIp, String osName, String osVersion, String biosVersion, Double cpuUsage, Long ramMax, Long ramUsage, String driveUsage, String taskList, String backgroundImage) {
+    public InitMessage(String hostname, String cpuName, String localIp, String osName, String osVersion, String biosVersion, Double cpuUsage, String ramMax, String ramUsage, String driveUsage, String taskList, String backgroundImage) {
         super("init");
         this.hostname = hostname;
         this.cpuName = cpuName;
@@ -52,6 +52,25 @@ public class InitMessage extends Message {
                 .put("driveUsage", this.driveUsage)
                 .put("taskList", this.taskList)
                 .put("backgroundImage", this.backgroundImage)
+                .toString();
+    }
+
+    @Override
+    public String toOutput() {
+        return new JSONObject()
+                .put("type", "init")
+                .put("hostname", this.hostname)
+                .put("cpuName", this.cpuName)
+                .put("localIp", this.localIp)
+                .put("osName", this.osName)
+                .put("osVersion", this.osVersion)
+                .put("biosVersion", this.biosVersion)
+                .put("cpuUsage", this.cpuUsage)
+                .put("ramMax", this.ramMax)
+                .put("ramUsage", this.ramUsage)
+                .put("driveUsage", this.driveUsage)
+                .put("taskList", "Size: "+this.taskList.length())
+                .put("backgroundImage", "Size: "+this.backgroundImage.length())
                 .toString();
     }
 }

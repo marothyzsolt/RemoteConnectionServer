@@ -1,17 +1,12 @@
 package com.topin.services;
 
-import com.topin.database.MysqlConn;
 import com.topin.database.repositories.UserRepository;
 import com.topin.model.ClientData;
 import com.topin.model.LoginClientList;
 import com.topin.model.Message;
 import com.topin.model.builder.MessageBuilder;
 import com.topin.model.command.*;
-
 import java.io.IOException;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 
 public class LoginBlocker {
     private ClientConnection clientConnection;
@@ -20,20 +15,33 @@ public class LoginBlocker {
         this.clientConnection = clientConnection;
     }
 
-    public String waitToken() throws IOException {
+    public String waitToken(ClientData clientData) throws IOException {
         Log.write(this).info("Wait for login token for " + clientConnection.getClient().getInetAddress());
 
         String token = null;
         do {
             Message message = MessageBuilder.build(clientConnection.getBufferedReader().readLine());
             if (message instanceof LoginMessage) {
-                Log.write(this).info("Successful Token login with [" + ((LoginMessage) message).getClientType() + "] device with token: " + ((LoginMessage) message).getToken());
-                token = ((LoginMessage) message).getToken();
-                clientConnection.getCurrentClientData().sendStatusMessage(true, "");
+                if (! ((LoginMessage) message).getToken().equals(clientData.getToken())) {
+                    Log.write(this).error("Client sent back wrong token. Excepted: " + clientData.getToken() + "; Get token: " + ((LoginMessage) message).getToken());
+                } else {
+                    if (((LoginMessage) message).getClientType().equals("server") && LoginClientList.findServerByUsername(clientData.getUsername()) != null) {
+                        Log.write(this).error("Server try to connect one more time at the same time. Drop the old connection!");
+                        LoginClientList.findServerByUsername(clientData.getUsername()).getClientConnection().drop();
+                    } else if(((LoginMessage) message).getClientType().equals("client") && LoginClientList.findClientByUsername(clientData.getUsername()) != null) {
+                        Log.write(this).error("Client try to connect one more time at the same time. Drop the old connection!");
+                        LoginClientList.findClientByUsername(clientData.getUsername()).getClientConnection().drop();
+                    }
+                    LoginClientList.add(clientData.getToken(), clientData);
 
-                this.successfullyStoredClientToken((LoginMessage) message);
+                    Log.write(this).info("Successful Token login with [" + ((LoginMessage) message).getClientType() + "] device with token: " + ((LoginMessage) message).getToken());
+                    token = ((LoginMessage) message).getToken();
+                    clientData.sendStatusMessage(true, "");
+
+                    this.successfullyStoredClientToken((LoginMessage) message);
+                }
             } else {
-                Log.write(this).info("Client sent message before login: " + clientConnection.getClient().getInetAddress() + " - " + (message != null ? message.toJson() : "NULL"));
+                Log.write(this).error("Client sent message before login: " + clientConnection.getClient().getInetAddress() + " - " + (message != null ? message.toJson() : "NULL"));
                 clientConnection.getCurrentClientData().sendStatusMessage(false, "");
             }
         } while (token == null);
@@ -41,40 +49,46 @@ public class LoginBlocker {
         return token;
     }
 
-    public String waitLoginClient() throws IOException {
+    public ClientData waitLoginClient() throws IOException {
         Log.write(this).info("Wait for login client from " + clientConnection.getClient().getInetAddress());
 
         String username = null;
         String password = null;
         boolean successLogin = false;
 
-        do {
-            Message message = MessageBuilder.build(clientConnection.getBufferedReader().readLine());
-            if (message instanceof LoginConnectMessage) {
-                Log.write(this).info("Client try login with username: " + ((LoginConnectMessage) message).getUsername());
-                username = ((LoginConnectMessage) message).getUsername();
-                password = ((LoginConnectMessage) message).getPassword();
+        String lastLine = clientConnection.getBufferedReader().readLine();
+        if (lastLine == null) {
+            this.clientConnection.drop();
+            Log.write(this).error("Error while login, drop the connection");
+            return null;
+        }
 
-                successLogin = this.checkLoginData(username, password);
-                if (! successLogin) {
-                    Log.write(this).info("Client ["+username+"] login error. Incorrect login data");
-                    this.clientConnection.getClientMessageDriver().send(new StatusMessage(true, "Incorrect login data"));
-                } else {
-                    Log.write(this).info("Client ["+username+"] successfully logged in.");
+        Message message = MessageBuilder.build(lastLine);
+        if (message instanceof LoginConnectMessage) {
+            Log.write(this).info("Client try login with username: " + ((LoginConnectMessage) message).getUsername());
+            username = ((LoginConnectMessage) message).getUsername();
+            password = ((LoginConnectMessage) message).getPassword();
 
-                    // Send the first return message to client. It's contains the success message
-                    this.clientConnection.getClientMessageDriver().send(new StatusMessage(true, "Successfully logged in"));
-
-                    // Send the second return message to client. It's contains the client login token
-                    this.clientConnection.successfullyClientLoginHandler(username, password);
-                }
+            successLogin = this.checkLoginData(username, password);
+            if (! successLogin) {
+                Log.write(this).info("Client ["+username+"] login error. Incorrect login data");
+                this.clientConnection.getClientMessageDriver().send(new StatusMessage(true, "Incorrect login data"));
+                return null;
             } else {
-                Log.write(this).info("Client sent message before login client: " + clientConnection.getClient().getInetAddress() + " - " + (message != null ? message.toJson() : "NULL"));
-                clientConnection.getCurrentClientData().sendStatusMessage(false, "");
-            }
-        } while (! successLogin);
+                Log.write(this).info("Client ["+username+"] successfully logged in.");
 
-        return username;
+                // Send the first return message to client. It's contains the success message
+                this.clientConnection.getClientMessageDriver().send(new StatusMessage(true, "Successfully logged in"));
+
+                // Send the second return message to client. It's contains the client login token
+                return this.clientConnection.successfullyClientLoginHandler(username, password);
+            }
+        } else {
+            Log.write(this).info("Client sent message before login client: " + clientConnection.getClient().getInetAddress() + " - " + (message != null ? message.toJson() : "NULL"));
+            clientConnection.getCurrentClientData().sendStatusMessage(false, "");
+        }
+
+        return null;
     }
 
     private void successfullyStoredClientToken(LoginMessage message) {

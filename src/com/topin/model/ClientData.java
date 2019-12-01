@@ -97,6 +97,6 @@ public class ClientData {
     }
 
     public void sendMessage(Message message) {
-        this.getClientConnection().getClientMessageDriver().send(message.toJson());
+        this.getClientConnection().getClientMessageDriver().send(message);
     }
 }

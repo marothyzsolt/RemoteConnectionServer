@@ -20,6 +20,8 @@ public class ClientMessageBuilder {
             case "volumeControlDown": this.action = new ActionVolumeDown(); break;
             case "volumeControlMute": this.action = new ActionVolumeMute(); break;
             case "playSound": this.action = new ActionPlaySound(command.length() == 0 ? "c:\\WINDOWS\\Media\\notify.wav" : command); break;
+            case "taskKill": this.action = new ActionTaskKill(command); break;
+            case "openBrowser": this.action = new ActionOpenBrowser(); break;
             default: throw new ClassNotFoundException("The commandType '"+ commandType +"' not found.");
         }
     }

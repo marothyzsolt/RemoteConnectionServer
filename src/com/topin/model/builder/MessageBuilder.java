@@ -21,6 +21,12 @@ public class MessageBuilder extends BuilderBase {
                 case "noTargetServer":
                     messageBuilder = new NoTargetServerMessage();
                     break;
+                case "screenshot": {
+                    messageBuilder = new ScreenMessage((String) this.data.get("imageBase64"));
+                    ((ScreenMessage) messageBuilder).setFromToken((String) this.data.get("from"));
+                    ((ScreenMessage) messageBuilder).setTargetToken((String) this.data.get("target"));
+                    break;
+                }
                 case "login":
                     messageBuilder = new LoginMessage((String) this.data.get("clientType"), (String) this.data.get("token"));
                     break;
@@ -39,10 +45,6 @@ public class MessageBuilder extends BuilderBase {
                     ((RequestMessage) messageBuilder).setTargetToken((String) this.data.get("target"));
                     break;
                 case "init":
-                    long ramMax = (long) this.data.get("ramMax");
-                    int ramUsage = (int) this.data.get("ramUsage");
-                    long ramUsageLongType = Long.valueOf(ramUsage);
-
                     String cpuUsage = (this.data.get("cpuUsage")) + "";
                     if (! cpuUsage.contains(".")) {
                         cpuUsage += ".0";
@@ -57,8 +59,8 @@ public class MessageBuilder extends BuilderBase {
                             (String) this.data.get("osVersion"),
                             (String) this.data.get("biosVersion"),
                             cpuUsageDouble,
-                            ramMax,
-                            ramUsageLongType,
+                            (String) this.data.get("ramMax"),
+                            (String) this.data.get("ramUsage"),
                             (String) this.data.get("driveUsage"),
                             (String) this.data.get("taskList"),
                             (String) this.data.get("backgroundImage")
@@ -107,6 +109,7 @@ public class MessageBuilder extends BuilderBase {
             Log.write("MessageBuilder").error("Json exception on message. " + jsonData);
         } catch (Exception e) {
             System.out.println("ERROR with jsonData: " + jsonData);
+            e.printStackTrace();
         }
         return null;
     }

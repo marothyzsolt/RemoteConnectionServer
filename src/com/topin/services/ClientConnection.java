@@ -6,6 +6,7 @@ import com.topin.model.ClientData;
 import com.topin.model.LoginClientList;
 import com.topin.model.Message;
 import com.topin.model.builder.MessageBuilder;
+import com.topin.model.command.NoTargetServerMessage;
 import com.topin.model.command.RequestMessage;
 import com.topin.model.command.StatusMessage;
 
@@ -20,6 +21,8 @@ public class ClientConnection implements Runnable {
     private String currentClientToken = null;
     private ClientData targetClientData;
     private LoginBlocker loginBlocker;
+
+    private boolean drop = false;
 
     public ClientConnection(Socket client) throws IOException {
         InputStream clientInputStream = client.getInputStream();
@@ -37,12 +40,20 @@ public class ClientConnection implements Runnable {
 
         try {
             // Wait for login from client
-            String x = loginBlocker.waitLoginClient();
+            ClientData clientData = loginBlocker.waitLoginClient();
+            if (clientData == null) {
+                this.drop();
+                if (this.currentClientToken != null) {
+                    LoginClientList.remove(this.currentClientToken);
+                }
+                this.client.close();
+                return;
+            }
             //Log.write(this).warn(x);
             //ConnectedClient.add(clientToken, this);
 
             // Wait for token from client (for authentication)
-            String clientToken = loginBlocker.waitToken();
+            String clientToken = loginBlocker.waitToken(clientData);
             //ConnectedClient.add(clientToken, this);
             if (LoginClientList.get(clientToken) == null) {
                 Log.write(this).error("The authentication was failed, the server drop the connection!");
@@ -55,30 +66,61 @@ public class ClientConnection implements Runnable {
                 this.listen();
             }
         } catch (Exception e) {
-            e.printStackTrace();
-            Log.write(this).error(e.getMessage());
+           // e.printStackTrace();
+           // Log.write(this).error(e.getMessage());
 
             if (this.getCurrentClientData() != null) {
                 Log.write(this).info("Connection closed (" + this.client + ") [" + this.getCurrentClientData() + "]");
             } else {
                 Log.write(this).info("Connection closed (" + this.client + ")");
             }
-            if (this.getCurrentClientData() != null) {
-                if (this.getCurrentClientData().getClientType().equals("server")) {
+
+            if (this.currentClientToken != null) {
+                if (this.getCurrentClientData() != null) { // The client/server already stored in center
+                    // Now must remove the disconnected server/client data from the center
+                    // And the server's client, or client's server target token id
+
+                    ClientData currentClient = this.getCurrentClientData();
+
+                    if (currentClient.getClientType().equals("server")) { // The disconnected user was a SERVER
+                        ClientData anotherUser = LoginClientList.findClientByUsername(currentClient.getUsername());
+                        if (anotherUser != null) {
+                            anotherUser.getClientConnection().getCurrentClientData().sendMessage(new NoTargetServerMessage());
+                            anotherUser.getClientConnection().targetClientData = null;
+                        }
+                        System.out.println("The SERVER has been disconnected");
+                    }
+
+                    if (currentClient.getClientType().equals("client")) { // The disconnected user was a CLIENT
+                        System.out.println("The CLIENT has been disconnected");
+                    }
+
+                /*if (this.getCurrentClientData().getClientType().equals("server")) {
+                    //System.out.println(LoginClientList.findClientByUsername(this.getCurrentClientData().getUsername()));
+                    //System.out.println(this.currentClientToken);
+
                     if (LoginClientList.findClientByUsername(this.getCurrentClientData().getUsername()) != null) {
+                        LoginClientList.findClientByUsername(this.getCurrentClientData().getUsername()).getClientConnection()
+                                .getTargetClientData().sendMessage(new NoTargetServerMessage());
+
                         LoginClientList.findClientByUsername(this.getCurrentClientData().getUsername()).getClientConnection().setTargetClientData(null);
+
                     }
                 } else {
                     if (LoginClientList.findServerByUsername(this.getCurrentClientData().getUsername()) != null) {
                         LoginClientList.findServerByUsername(this.getCurrentClientData().getUsername()).getClientConnection().setTargetClientData(null);
                     }
+                }*/
+
+                    Log.write(this).info("Remove connected client from ClientList: " + this.currentClientToken);
+                    LoginClientList.remove(this.currentClientToken);
+                    System.out.println(LoginClientList.getClientList());
                 }
             }
 
-            if (this.currentClientToken != null) {
-                Log.write(this).info("Remove connected client from ClientList: " + this.currentClientToken);
-                LoginClientList.remove(this.currentClientToken);
-            }
+            try {
+                this.client.close();
+            } catch (IOException ignored) { }
         }
     }
 
@@ -92,23 +134,23 @@ public class ClientConnection implements Runnable {
         }
     }
 
-    public void successfullyClientLoginHandler(String username, String password) {
+    public ClientData successfullyClientLoginHandler(String username, String password) {
         if (this.currentClientToken == null || this.currentClientToken.length() != 32) {
             this.currentClientToken = Utils.randomGetNumericString(32);
         }
         ClientData clientData = new ClientData(username, password, this.currentClientToken, this);
 
-        // Add if not exists
-        LoginClientList.add(this.currentClientToken, clientData);
+        // The center send back the success message to client.
+        clientData.sendStatusMessage(true, this.currentClientToken);
 
-        // After stored the client data into the LoginClientList, the center send back the success message to client.
-        this.getCurrentClientData().sendStatusMessage(true, this.currentClientToken);
-        Log.write(this).info("Store client [" + username + " - " + clientData.getClientType() +"] data with token: " + this.currentClientToken);
+        return clientData;
     }
 
     private void listen() throws IOException {
         String message;
         do {
+            System.out.println("Thread count: " + Thread.activeCount());
+
             message = this.bufferedReader.readLine();
 
             // If target client not defined yet, it's try to define it, and store
@@ -116,8 +158,21 @@ public class ClientConnection implements Runnable {
 
             //this.getClientMessageDriver().send(new RequestMessage("init", null));
 
-            Message messageObject = MessageBuilder.build(message);
-            this.onMessage(messageObject);
+            if (message == null) {
+                Log.write(this).error("Got NULL message, drop the connection: " + this.currentClientToken + "["+this.getCurrentClientData().getClientType()+"]");
+                if (this.getCurrentClientData().getClientType().equals("client") && LoginClientList.findServerByUsername(this.getCurrentClientData().getUsername()) != null) {
+                    (LoginClientList.findServerByUsername(this.getCurrentClientData().getUsername()).getClientConnection().targetClientData) = null;
+                    Log.write(this).info("Remove old target");
+                } else if (this.getCurrentClientData().getClientType().equals("server") && LoginClientList.findClientByUsername(this.getCurrentClientData().getUsername()) != null) {
+                    (LoginClientList.findClientByUsername(this.getCurrentClientData().getUsername()).getClientConnection().targetClientData) = null;
+                    Log.write(this).info("Remove old target");
+                }
+                LoginClientList.remove(this.getCurrentClientToken());
+                this.drop();
+            } else {
+                Message messageObject = MessageBuilder.build(message);
+                this.onMessage(messageObject);
+            }
         } while (message != null);
     }
 
@@ -156,5 +211,14 @@ public class ClientConnection implements Runnable {
 
     public Socket getClient() {
         return client;
+    }
+
+    public void drop() {
+        this.drop = true;
+        try {
+            this.client.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

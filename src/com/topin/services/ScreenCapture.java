@@ -1,6 +1,7 @@
 package com.topin.services;
 
 import com.topin.driver.ClientMessageDriver;
+import com.topin.model.Message;
 import com.topin.model.command.StatusMessage;
 
 import javax.imageio.ImageIO;
@@ -32,7 +33,7 @@ public class ScreenCapture implements Runnable {
         }*/
 
         while(true) {
-            String message = new StatusMessage(true, "").toJson();
+            Message message = new StatusMessage(true, "");
             clientMessageDriver.send(message);
             try {
                 Thread.sleep(1500);

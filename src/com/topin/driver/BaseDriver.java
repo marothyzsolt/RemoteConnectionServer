@@ -1,5 +1,7 @@
 package com.topin.driver;
 
+import com.topin.model.Message;
+
 import java.net.Socket;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -12,14 +14,14 @@ abstract public class BaseDriver {
         this.client = client;
     }
 
-    public void send(Object o) {
+    public void send(Message o) {
         try {
             this.driver.put(o);
         } catch (Exception ignored) {}
     }
 
-    public Object waitForDriver() throws InterruptedException {
-        return this.driver.take();
+    public Message waitForDriver() throws InterruptedException {
+        return (Message) this.driver.take();
     }
 
     public Socket getClient() {

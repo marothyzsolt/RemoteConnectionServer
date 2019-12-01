@@ -42,4 +42,8 @@ abstract public class Message implements MessageContract {
     public void setTargetToken(String targetToken) {
         this.targetToken = targetToken;
     }
+
+    public String toOutput() {
+        return toString();
+    }
 }

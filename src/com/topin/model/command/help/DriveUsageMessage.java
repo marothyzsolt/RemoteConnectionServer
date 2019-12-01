@@ -27,4 +27,5 @@ public class DriveUsageMessage extends Message {
                 .toString();
     }
 
+    public String toOutput() { return this.toString(); }
 }
