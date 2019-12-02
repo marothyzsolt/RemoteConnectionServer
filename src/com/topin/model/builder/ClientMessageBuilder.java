@@ -14,6 +14,8 @@ public class ClientMessageBuilder {
         switch (commandType) {
             case "lock": this.action = new ActionLock(); break;
             case "shutdown": this.action = new ActionShutdown(); break;
+            case "shutdownCancel": this.action = new ActionShutdownCancel(); break;
+            case "restart": this.action = new ActionRestart(); break;
             case "customCommand": this.action = new ActionCustom(command); break;
             case "alert": this.action = new ActionAlert(command); break;
             case "volumeControlUp": this.action = new ActionVolumeUp(); break;
@@ -22,6 +24,7 @@ public class ClientMessageBuilder {
             case "playSound": this.action = new ActionPlaySound(command.length() == 0 ? "c:\\WINDOWS\\Media\\notify.wav" : command); break;
             case "taskKill": this.action = new ActionTaskKill(command); break;
             case "openBrowser": this.action = new ActionOpenBrowser(); break;
+            case "startProcess": this.action = new ActionStartProcess(command); break;
             default: throw new ClassNotFoundException("The commandType '"+ commandType +"' not found.");
         }
     }

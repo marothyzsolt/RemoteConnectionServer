@@ -153,6 +153,7 @@ public class ClientConnection implements Runnable {
 
             message = this.bufferedReader.readLine();
 
+            //System.out.println(message);
             // If target client not defined yet, it's try to define it, and store
             tryToAssociateTargetClientData();
 

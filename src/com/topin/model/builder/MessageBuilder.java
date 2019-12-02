@@ -21,6 +21,24 @@ public class MessageBuilder extends BuilderBase {
                 case "noTargetServer":
                     messageBuilder = new NoTargetServerMessage();
                     break;
+                case "mouseMove":
+                    messageBuilder = new MouseMoveMessage((Integer) this.data.get("x"), (Integer) this.data.get("y"));
+                    if (this.data.containsKey("from")) { // TODO: REFACTOR
+                        ((MouseMoveMessage) messageBuilder).setFromToken((String) this.data.get("from"));
+                    }
+                    if (this.data.containsKey("target")) {
+                        ((MouseMoveMessage) messageBuilder).setTargetToken((String) this.data.get("target"));
+                    }
+                    break;
+                case "mouseClick":
+                    messageBuilder = new MouseClickMessage((String) this.data.get("button"), (Integer) this.data.get("mouseType"));
+                    if (this.data.containsKey("from")) { // TODO: REFACTOR
+                        ((MouseClickMessage) messageBuilder).setFromToken((String) this.data.get("from"));
+                    }
+                    if (this.data.containsKey("target")) {
+                        ((MouseClickMessage) messageBuilder).setTargetToken((String) this.data.get("target"));
+                    }
+                    break;
                 case "screenshot": {
                     messageBuilder = new ScreenMessage((String) this.data.get("imageBase64"));
                     ((ScreenMessage) messageBuilder).setFromToken((String) this.data.get("from"));
@@ -106,9 +124,9 @@ public class MessageBuilder extends BuilderBase {
             Message messageObject = (Message) messageBuilder.get();
             return messageObject;
         } catch (JSONException err){
-            Log.write("MessageBuilder").error("Json exception on message. " + jsonData);
+            Log.write("MessageBuilder").error("Json exception on message: " + err.getMessage() + ". " + jsonData);
         } catch (Exception e) {
-            System.out.println("ERROR with jsonData: " + jsonData);
+            Log.write("MessageBuilder").error("ERROR with jsonData: " + jsonData);
             e.printStackTrace();
         }
         return null;
