@@ -18,6 +18,15 @@ public class MessageBuilder extends BuilderBase {
         MessageContract messageBuilder;
         try {
             switch (this.type) {
+                case "keyCode":
+                    messageBuilder = new KeyCodeMessage((Integer) this.data.get("keyCode"));
+                    if (this.data.containsKey("from")) { // TODO: REFACTOR
+                        ((KeyCodeMessage) messageBuilder).setFromToken((String) this.data.get("from"));
+                    }
+                    if (this.data.containsKey("target")) {
+                        ((KeyCodeMessage) messageBuilder).setTargetToken((String) this.data.get("target"));
+                    }
+                    break;
                 case "noTargetServer":
                     messageBuilder = new NoTargetServerMessage();
                     break;
@@ -45,6 +54,9 @@ public class MessageBuilder extends BuilderBase {
                     ((ScreenMessage) messageBuilder).setTargetToken((String) this.data.get("target"));
                     break;
                 }
+                case "ping":
+                    messageBuilder = new PingMessage();
+                    break;
                 case "login":
                     messageBuilder = new LoginMessage((String) this.data.get("clientType"), (String) this.data.get("token"));
                     break;

@@ -4,22 +4,18 @@ import com.topin.model.Message;
 import org.json.JSONObject;
 
 public class KeyCodeMessage extends Message {
-    private boolean status;
-    private String keycode;
-    private Integer pushType;
+    private Integer keyCode;
 
-    public KeyCodeMessage(String keycode, Integer pushType) {
-        super("request");
-        this.keycode = keycode;
-        this.pushType = pushType;
+    public KeyCodeMessage(Integer keyCode) {
+        super("keyCode");
+        this.keyCode = keyCode;
     }
 
     @Override
     public String toJson() {
         return new JSONObject()
-                .put("type", "request")
-                .put("keycode", this.keycode)
-                .put("pushType", this.pushType)
+                .put("type", "keyCode")
+                .put("keyCode", this.keyCode)
                 .put("from", this.getFromToken())
                 .put("target", this.getTargetToken())
                 .toString();

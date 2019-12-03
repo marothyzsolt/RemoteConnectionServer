@@ -30,6 +30,10 @@ public class ClientConnectionMessage implements Runnable {
                 Log.write(this).warn("Got a null message, and the client has been disconnected. Remove old data");
             }
         } else {
+            if(clientMessage.getType().equals("ping")) {
+                return;
+            }
+
             Log.write(this).info("Received message: " + this.clientMessage.toOutput());
 
             this.generateCallCustomClass();
